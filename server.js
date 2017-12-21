@@ -1,17 +1,28 @@
-// To enable HTTPS: see https://stackoverflow.com/questions/11744975/enabling-https-on-express-js?rq=1
-
-// For HTTP
-
 const express = require('express');
 const body_parser = require('body-parser');
 const MongoClient = require('mongodb').MongoClient;
 const db = require('./config/db');
+const fs = require('fs');
+const https = require('https');
 
 require('dotenv').config();
 
 const app = express();
 
 const port = 3000;
+
+// reading private key files for HTTPS
+const key = fs.readFileSync('encryption/private.key');
+const cert = fs.readFileSync('encryption/primary.crt');
+const ca = fs.readFileSync('encryption/intermediate.crt');
+
+const options = {
+  key: key,
+  cert: cert,
+  ca: ca
+};
+
+const server = https.createServer(options, app);
 
 app.use(body_parser.urlencoded({extended: true}));
 
@@ -23,7 +34,7 @@ MongoClient.connect(db.url, (err, database) => {
 
   require('./app/routes')(app, database);
 
-  app.listen(port, process.env.ADDRESS, () => {
+  server.listen(port, process.env.ADDRESS, () => {
     console.log('Running on ' + port);
   });
 
