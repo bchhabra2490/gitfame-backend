@@ -1,3 +1,6 @@
+const fetch = require('node-fetch');
+const payload = require('./payload');
+
 module.exports = {
   fetchData: function(req, res) {
     return fetch('https://api.github.com/graphql', {

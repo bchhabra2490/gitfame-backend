@@ -1,5 +1,3 @@
-const fetch = require('node-fetch');
-const payload = require('./../helper/payload');
 const fetchInfo = require('./../helper/fetch');
 require('dotenv').config();
 
