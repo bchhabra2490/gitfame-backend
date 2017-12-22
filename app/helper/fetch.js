@@ -2,10 +2,10 @@ const fetch = require('node-fetch');
 const payload = require('./payload');
 
 module.exports = {
-  fetchData: function(req, res) {
+  fetchData: function(name, res) {
     return fetch('https://api.github.com/graphql', {
       method: 'POST',
-      body: JSON.stringify(payload.userPayload(req.body.name, true, null)),
+      body: JSON.stringify(payload.userPayload(name, true, null)),
       headers: {
         'Authorization': 'bearer ' + process.env.GIT_TOKEN,
         'Content-Type': 'application/json'
