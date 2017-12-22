@@ -1,124 +1,11 @@
 const fetch = require('node-fetch');
+const payload = require('./../helper/payload');
 require('dotenv').config();
-
-function userPayload(username) {
-  return {
-    'query': `
-    	query($username: String!)
-    	{
-				user(login: $username) {
-					...userData
-				}
-			}
-			
-			fragment userData on User {
-			  id
-			  login
-			  name
-			  bio
-        createdAt
-				avatarUrl
-				url
-				followers {
-					totalCount
-				}
-				following {
-					totalCount
-				}
-				repositories {
-				  totalCount
-				}
-			}
-		`,
-    "variables": `
-			{
-				"username": "` + username + `"
-			}
-		`
-  }
-}
-
-function reposPayload(username, id, endCursor) {
-  return {
-    "query": `
-			query($username: String!, $id: ID!, $afterCursor: String)
-			{
-				user(login: $username) {
-					repositories(first: 100, after: $afterCursor, orderBy: {field: NAME,direction: ASC}) {
-						...repoData
-					}
-				}
-			}
-
-			fragment repoStats on Repository {
-				nameWithOwner
-				url
-				owner {
-					login
-				}
-				stargazers {
-					totalCount
-				}
-				watchers {
-					totalCount
-				}
-				forks {
-					totalCount
-				}
-				branch: defaultBranchRef {
-				  name
-				}
-				languages(first: 100){
-          nodes{
-            name
-            color
-          }
-        }
-				contributions: defaultBranchRef {
-					target {
-						... on Commit {
-							userCommits: history(author: {id: $id}) {
-								totalCount
-							}
-							totalCommits: history {
-								totalCount
-							}
-						}
-					}
-				}
-			}
-
-			fragment repoData on RepositoryConnection {
-				totalCount
-				pageInfo {
-					hasNextPage
-					endCursor
-				}
-				nodes {
-					... on Repository {
-						isFork
-					  parent {
- 							...repoStats
- 						}
-						...repoStats
-					}
-				}
-			}
-		`,
-    "variables": `
-			{
-				"username": "` + username + `",
-				"id": "` + id + `",
-				"afterCursor": ` + (endCursor !== null ? `"` + endCursor + `"` : `null`) + `
-			}
-		`
-  }
-}
 
 function fetchData(req, res) {
   return fetch('https://api.github.com/graphql', {
     method: 'POST',
-    body: JSON.stringify(userPayload(req.body.name, true, null)),
+    body: JSON.stringify(payload.userPayload(req.body.name, true, null)),
     headers: {
       'Authorization': 'bearer ' + process.env.GIT_TOKEN,
       'Content-Type': 'application/json'
@@ -165,7 +52,7 @@ function fetchData(req, res) {
       function traverseAllCursors(endCursor) {
         return fetch('https://api.github.com/graphql', {
           method: 'POST',
-          body: JSON.stringify(reposPayload(userInfo['login'], userInfo['id'], endCursor)),
+          body: JSON.stringify(payload.reposPayload(userInfo['login'], userInfo['id'], endCursor)),
           headers: {
             'Authorization': 'bearer ' + process.env.GIT_TOKEN,
             'Content-Type': 'application/json'
